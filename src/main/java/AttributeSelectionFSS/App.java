@@ -67,20 +67,20 @@ public class App {
         //Randomize
         Randomize randomize = new Randomize();
         randomize.setInputFormat(data);
-        data = Filter.useFilter(data,randomize);
+        Instances random = Filter.useFilter(data,randomize);
 
         //Split
         RemovePercentage removeTrain = new RemovePercentage();
-        removeTrain.setInputFormat(data);
+        removeTrain.setInputFormat(random);
         removeTrain.setInvertSelection(true);
         removeTrain.setPercentage(70);
-        Instances holdTrain = Filter.useFilter(data,removeTrain);
+        Instances holdTrain = Filter.useFilter(random,removeTrain);
 
         RemovePercentage removeTest = new RemovePercentage();
-        removeTest.setInputFormat(data);
+        removeTest.setInputFormat(random);
         removeTest.setInvertSelection(false);
         removeTest.setPercentage(70);
-        Instances holdTest = Filter.useFilter(data,removeTest);
+        Instances holdTest = Filter.useFilter(random,removeTest);
 
         //Train atributu hoberenak lortu
         AttributeSelection attributeSelection = new AttributeSelection();
@@ -184,7 +184,88 @@ public class App {
         return testBerria;
     }
 
-    private static void ataza2() {
+    private static void ataza2() throws Exception {
+        //Train atributu hoberenak lortu
+        AttributeSelection attributeSelection = new AttributeSelection();
+        attributeSelection.setInputFormat(data);
+        Instances trainBerria = Filter.useFilter(data,attributeSelection);
+
+        //Instantzia berria sortu
+        Instance instantziaBerria = new DenseInstance(trainBerria.numAttributes());
+        trainBerria.add(instantziaBerria);
+
+        //Estimazioak egin
+        ataza2ReplaceGabe(trainBerria);
+        ataza2Replacearekin(trainBerria);
+    }
+
+    private static void ataza2ReplaceGabe(Instances trainBerria) throws Exception {
+        double percentage = (double)100/trainBerria.numInstances(); //instantzia bakar bat lortzeko portzentaia
+        RemovePercentage trainOna = new RemovePercentage();
+        trainOna.setInputFormat(trainBerria);
+        trainOna.setInvertSelection(true);
+        trainOna.setPercentage(100-percentage);
+        Instances train = Filter.useFilter(trainBerria,trainOna);
+
+        RemovePercentage bakarra = new RemovePercentage();
+        bakarra.setInputFormat(trainBerria);
+        bakarra.setInvertSelection(false);
+        bakarra.setPercentage(100-percentage);
+        Instances instantziaBakarra = Filter.useFilter(trainBerria,bakarra);
+
+        ArffSaver saver = new ArffSaver();
+        saver.setInstances(instantziaBakarra);
+        saver.setFile(new File(pathToSaveArff));
+        saver.writeBatch();
+
+        NaiveBayes naive = new NaiveBayes();
+        naive.buildClassifier(train);
+        SerializationHelper.write(pathToSaveModel, naive);
+
+        Instances testBerria = goiburuakZuzendu(test);
+        NaiveBayes naiveModel = (NaiveBayes) SerializationHelper.read(pathToSaveModel);
+        Evaluation eval = new Evaluation(train);
+        eval.evaluateModel(naiveModel, testBerria);
+        printTest.println("REPLACE EGIN ETA GERO:");
+        printTest.println("IRAGARPENAK --> ");
+        printTest.println("WEIGHTED F-MEASURE -> " + eval.weightedFMeasure() + "\n");
+
+    }
+
+    private static void ataza2Replacearekin(Instances trainBerria) throws Exception {
+        double percentage = (double)100/trainBerria.numInstances(); //instantzia bakar bat lortzeko portzentaia
+        RemovePercentage trainOna = new RemovePercentage();
+        trainOna.setInputFormat(trainBerria);
+        trainOna.setInvertSelection(true);
+        trainOna.setPercentage(100-percentage);
+        Instances train = Filter.useFilter(trainBerria,trainOna);
+
+        RemovePercentage bakarra = new RemovePercentage();
+        bakarra.setInputFormat(trainBerria);
+        bakarra.setInvertSelection(false);
+        bakarra.setPercentage(100-percentage);
+        Instances instantziaBakarra = Filter.useFilter(trainBerria,bakarra);
+
+        ArffSaver saver = new ArffSaver();
+        saver.setInstances(instantziaBakarra);
+        saver.setFile(new File(pathToSaveArff));
+        saver.writeBatch();
+
+        ReplaceMissingValues replaceMissingValues = new ReplaceMissingValues();
+        replaceMissingValues.setInputFormat(train);
+        train = Filter.useFilter(train, replaceMissingValues);
+
+        NaiveBayes naive = new NaiveBayes();
+        naive.buildClassifier(train);
+        SerializationHelper.write(pathToSaveModel, naive);
+
+        Instances testBerria = goiburuakZuzendu(test);
+        NaiveBayes naiveModel = (NaiveBayes) SerializationHelper.read(pathToSaveModel);
+        Evaluation eval = new Evaluation(train);
+        eval.evaluateModel(naiveModel, testBerria);
+        printTest.println("REPLACE EGIN ETA GERO:");
+        printTest.println("IRAGARPENAK --> ");
+        printTest.println("WEIGHTED F-MEASURE -> " + eval.weightedFMeasure() + "\n");
 
     }
 
