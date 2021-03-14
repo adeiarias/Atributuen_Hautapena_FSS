@@ -1,6 +1,7 @@
 package AttributeSelectionFSS;
 
 
+import jdk.swing.interop.SwingInterOpUtils;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.core.Attribute;
@@ -33,6 +34,13 @@ public class App {
 
     public static void main(String[] args) throws Exception{
         if(args.length != 6) {
+            System.out.println("EZ DITUZU PARAMETROAK MODU EGOKIAN SARTU");
+            System.out.println("1. PARAMETROA -> DATA ARFF FITXATEGIA");
+            System.out.println("2. PARAMETROA -> LEHENENGO ARIKETAREN IRAGARPENAK GORDETZEKO FITXATEGIA");
+            System.out.println("3. PARAMETROA -> TEST ARFF FITXATEGIA");
+            System.out.println("4. PARAMETROA -> BIGARREN ARIKETAREN IRAGARPENAK GORDETZEKO FITXATEGIA");
+            System.out.println("5. PARAMETROA -> HEADERS ZUZENTZEKO ERABILIKO DEN ARFF FITXATEGIA");
+            System.out.println("6. PARAMETROA -> MODELO OPTIMOA GORDETZEKO FITXATEGIA");
 
         }else{
             ConverterUtils.DataSource sourceData = new ConverterUtils.DataSource(args[0]);
@@ -174,7 +182,6 @@ public class App {
         ConverterUtils.DataSource path = new ConverterUtils.DataSource(pathToSaveArff);
         Instances egiaztatzeko = path.getDataSet();
         int i=0;
-        int[] borratuBeharrekoak = new int[test.numAttributes()-egiaztatzeko.numAttributes()];
         for(Attribute attribute : Collections.list(test.enumerateAttributes())){
             if(!Collections.list(egiaztatzeko.enumerateAttributes()).contains(attribute)) {
                 testBerria.deleteAttributeAt(attribute.index()-i);
